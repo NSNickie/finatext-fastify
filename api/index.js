@@ -11,15 +11,20 @@ const app = Fastify({
 const candleData = new Map();
 const csvPath = path.resolve(__dirname, "order_books.csv");
 console.log(csvPath);
+const pad = (num) => String(num).padStart(2, "0");
 function loadCSV() {
   return new Promise((resolve, reject) => {
     fs.createReadStream(csvPath)
       .pipe(csv(["time", "code", "price"]))
       .on("data", (row) => {
-        const date = new Date(row.time);
-        const hourKey = `${row.code}_${date.getFullYear()}-${
+        const formattedTime = row.time
+          .replace(" JST", "")
+          .replace(" +0900", "+09:00");
+        const date = new Date(formattedTime);
+
+        const hourKey = `${row.code}_${date.getFullYear()}-${pad(
           date.getMonth() + 1
-        }-${date.getDate()}_${date.getHours()}`;
+        )}-${pad(date.getDate())}_${pad(date.getHours())}`;
         const price = parseInt(row.price, 10);
         if (!candleData.has(hourKey)) {
           candleData.set(hourKey, {
@@ -61,7 +66,7 @@ app.put("/flag", function (req, reply) {
 
 app.get("/candle", function (req, reply) {
   const { code, year, month, day, hour } = req.query;
-  const key = `${code}_${year}-${month}-${day}_${hour}`;
+  const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
   console.log(key);
   if (candleData.has(key)) {
     console.log("return:\n" + candleData.get(key));
@@ -72,9 +77,9 @@ app.get("/candle", function (req, reply) {
   }
 });
 
+await loadCSV();
 export default async function handler(req, reply) {
   await app.ready();
-  await loadCSV();
-  console.log(candleData);
+
   app.server.emit("request", req, reply);
 }
