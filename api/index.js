@@ -62,7 +62,7 @@ app.put("/flag", function (req, reply) {
 app.get("/candle", function (req, reply) {
   const { code, year, month, day, hour } = req.query;
   const key = `${code}_${year}-${month}-${day}_${hour}`;
-
+  console.log(key);
   if (candleData.has(key)) {
     console.log("return:\n" + candleData.get(key));
     return reply.send(candleData.get(key));
