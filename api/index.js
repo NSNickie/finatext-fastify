@@ -11,7 +11,7 @@ const app = Fastify({
 const csvPath = path.resolve(__dirname, "order_books.csv");
 console.log(csvPath);
 const pad = (num) => String(num).padStart(2, "0");
-function loadCSV() {
+function loadCSV(candleData) {
   return new Promise((resolve, reject) => {
     fs.createReadStream(csvPath)
       .pipe(csv(["time", "code", "price"]))
@@ -65,7 +65,7 @@ app.put("/flag", function (req, reply) {
 
 app.get("/candle", async function (req, reply) {
   const candleData = new Map();
-  await loadCSV();
+  await loadCSV(candleData);
   console.log("CSV Loaded, total entries:", candleData.size);
   console.log("Candle Data:", candleData);
   const { code, year, month, day, hour } = req.query;
