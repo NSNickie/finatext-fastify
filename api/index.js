@@ -77,7 +77,7 @@ app.get("/candle", function (req, reply) {
   }
 });
 
-await loadCSV();
+loadCSV();
 export default async function handler(req, reply) {
   await app.ready();
 
