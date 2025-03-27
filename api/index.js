@@ -90,42 +90,23 @@ app.put("/flag", async function (req, reply) {
 });
 
 app.get("/candle", async function (req, reply) {
-  try {
-    const { code, year, month, day, hour } = req.query;
+  const { code, year, month, day, hour } = req.query;
 
-    // 输入验证
-    if (!code || !year || !month || !day || !hour) {
-      return reply.code(400).send({ error: "Missing required parameters" });
-    }
+  const candleData = new Map();
+  await loadCSV(candleData);
+  console.log("CSV data loaded, total entries:", candleData.size);
 
-    // 验证日期参数
-    const date = new Date(`${year}-${month}-${day}T${hour}:00:00`);
-    if (isNaN(date.getTime())) {
-      return reply.code(400).send({ error: "Invalid date parameters" });
-    }
-
-    // 每次请求都重新加载数据
-    const candleData = new Map();
-    await loadCSV(candleData);
-    console.log("CSV data loaded, total entries:", candleData.size);
-    app.log.info("CSV data loaded, total entries:", candleData.size);
-
-    const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
-    const data = candleData.get(key);
-
-    if (!data) {
-      app.log.info(`No data found for key: ${key}`);
-      return reply
-        .code(404)
-        .send({ error: "No data found for the specified parameters" });
-    }
-
-    app.log.info(`Data found for key: ${key}`);
-    return data;
-  } catch (error) {
-    app.log.error("Error in /candle endpoint:", error);
-    return reply.code(500).send({ error: "Internal server error" });
+  const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
+  const data = candleData.get(key);
+  console.log("Find data?", data);
+  if (!data) {
+    console.log("no data...");
+    return reply
+      .code(404)
+      .send({ error: "No data found for the specified parameters" });
   }
+  console.log("find!!!");
+  return data;
 });
 
 export default async function handler(req, reply) {
