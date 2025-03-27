@@ -37,6 +37,8 @@ function loadCSV() {
       })
       .on("end", resolve)
       .on("error", reject);
+
+    console.log(candleData);
   });
 }
 
