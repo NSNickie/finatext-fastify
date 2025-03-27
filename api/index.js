@@ -31,7 +31,7 @@ async function loadCSV(candleData) {
             date.getMonth() + 1
           )}-${pad(date.getDate())}_${pad(date.getHours())}`;
           const price = parseInt(row.price, 10);
-          
+
           if (!candleData.has(hourKey)) {
             candleData.set(hourKey, {
               open: price,
@@ -57,13 +57,15 @@ async function loadCSV(candleData) {
 app.put("/login", async (req, reply) => {
   try {
     const { username, password } = req.body;
-    
+
     if (!username || !password) {
-      return reply.code(400).send({ error: "Username and password are required" });
+      return reply
+        .code(400)
+        .send({ error: "Username and password are required" });
     }
 
     // 使用更安全的密码哈希方法
-    const salt = crypto.randomBytes(16).toString('hex');
+    const salt = crypto.randomBytes(16).toString("hex");
     const token = crypto
       .createHash("sha256")
       .update(`${username}${password}${salt}`)
@@ -102,7 +104,11 @@ app.get("/candle", async function (req, reply) {
     }
 
     // 检查缓存是否需要更新
-    if (!candleDataCache || !lastLoadTime || Date.now() - lastLoadTime > CACHE_DURATION) {
+    if (
+      !candleDataCache ||
+      !lastLoadTime ||
+      Date.now() - lastLoadTime > CACHE_DURATION
+    ) {
       candleDataCache = new Map();
       await loadCSV(candleDataCache);
       lastLoadTime = Date.now();
@@ -113,9 +119,12 @@ app.get("/candle", async function (req, reply) {
     const data = candleDataCache.get(key);
 
     if (!data) {
-      return reply.code(404).send({ error: "No data found for the specified parameters" });
+      console.log("no data...");
+      return reply
+        .code(404)
+        .send({ error: "No data found for the specified parameters" });
     }
-
+    console.log("find!!" + data);
     return data;
   } catch (error) {
     app.log.error(error);
