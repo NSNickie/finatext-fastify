@@ -120,9 +120,7 @@ app.get("/candle", async function (req, reply) {
         candle.close = price;
       }
     });
-  console.log(
-    candleData.get(`${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`)
-  );
+  console.log(candleData.entries());
   return candleData.get(
     `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`
   );
