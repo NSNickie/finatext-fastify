@@ -15,7 +15,7 @@ const pad = (num) => String(num).padStart(2, "0");
 // 添加时区转换函数
 function convertToJST(date) {
   // 将时间转换为 JST (UTC+9)
-  return new Date(date.getTime() + (9 * 60 * 60 * 1000));
+  return new Date(date.getTime() + 9 * 60 * 60 * 1000);
 }
 
 // 由于 Vercel 是无状态的，我们每次都需要重新加载数据
@@ -114,7 +114,7 @@ app.get("/candle", async function (req, reply) {
               .replace(" JST", "")
               .replace(" +0900", "+09:00");
             const date = new Date(formattedTime);
-            
+
             // 确保日期在 JST 时区
             const jstDate = convertToJST(date);
 
@@ -147,14 +147,14 @@ app.get("/candle", async function (req, reply) {
 
     // 构建查询 key 时也使用 JST 时区
     const queryDate = new Date(`${year}-${month}-${day}T${hour}:00:00`);
-    const jstQueryDate = convertToJST(queryDate);
-    const key = `${code}_${jstQueryDate.getFullYear()}-${pad(
-      jstQueryDate.getMonth() + 1
-    )}-${pad(jstQueryDate.getDate())}_${pad(jstQueryDate.getHours())}`;
-
+    // const jstQueryDate = convertToJST(queryDate);
+    const key = `${code}_${queryDate.getFullYear()}-${pad(
+      queryDate.getMonth() + 1
+    )}-${pad(queryDate.getDate())}_${pad(queryDate.getHours())}`;
+    console.log(candleData);
     app.log.info(`Searching for key: ${key}`);
     const data = candleData.get(key);
-    
+
     if (!data) {
       app.log.info(`No data found for key: ${key}`);
       return reply
