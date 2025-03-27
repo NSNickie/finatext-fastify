@@ -77,7 +77,10 @@ app.get("/candle", function (req, reply) {
   }
 });
 
-loadCSV();
+(async () => {
+  await loadCSV();
+  console.log("CSV Loaded, total entries:", candleData.size);
+})();
 export default async function handler(req, reply) {
   await app.ready();
 
