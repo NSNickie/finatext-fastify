@@ -8,7 +8,6 @@ const app = Fastify({
   logger: true,
 });
 
-const candleData = new Map();
 const csvPath = path.resolve(__dirname, "order_books.csv");
 console.log(csvPath);
 const pad = (num) => String(num).padStart(2, "0");
@@ -64,7 +63,11 @@ app.put("/flag", function (req, reply) {
   return {};
 });
 
-app.get("/candle", function (req, reply) {
+app.get("/candle", async function (req, reply) {
+  const candleData = new Map();
+  await loadCSV();
+  console.log("CSV Loaded, total entries:", candleData.size);
+  console.log("Candle Data:", candleData);
   const { code, year, month, day, hour } = req.query;
   const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
   console.log(key);
@@ -80,6 +83,6 @@ app.get("/candle", function (req, reply) {
 export default async function handler(req, reply) {
   await app.ready();
   await loadCSV();
-  console.log("CSV Loaded, total entries:", candleData.size);
+
   app.server.emit("request", req, reply);
 }
