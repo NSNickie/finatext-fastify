@@ -69,10 +69,10 @@ app.get("/candle", function (req, reply) {
   const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
   console.log(key);
   if (candleData.has(key)) {
-    console.log("return:\n" + candleData.get(key));
-    return reply.send(candleData.get(key));
+    console.log("find!return:\n" + candleData.get(key));
+    return candleData.get(key);
   } else {
-    console.log("return:\n" + candleData.get(key));
+    console.log("no data..return:\n" + candleData.get(key));
     return reply.code(404).send({ error: "No data found" });
   }
 });
