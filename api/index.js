@@ -9,7 +9,7 @@ const app = Fastify({
 });
 
 // 使用 process.cwd() 替代 __dirname
-const csvPath = path.join(process.cwd(), "api", "order_books.csv");
+const csvPath = path.join(__dirname, "order_books.csv");
 const pad = (num) => String(num).padStart(2, "0");
 
 // 由于 Vercel 是无状态的，我们每次都需要重新加载数据
@@ -93,7 +93,33 @@ app.get("/candle", async function (req, reply) {
   const { code, year, month, day, hour } = req.query;
 
   const candleData = new Map();
-  await loadCSV(candleData);
+  fs.createReadStream(csvPath)
+    .pipe(csv(["time", "code", "price"]))
+    .on("data", (row) => {
+      const formattedTime = row.time
+        .replace(" JST", "")
+        .replace(" +0900", "+09:00");
+      const date = new Date(formattedTime);
+
+      const hourKey = `${row.code}_${date.getFullYear()}-${pad(
+        date.getMonth() + 1
+      )}-${pad(date.getDate())}_${pad(date.getHours())}`;
+      const price = parseInt(row.price, 10);
+
+      if (!candleData.has(hourKey)) {
+        candleData.set(hourKey, {
+          open: price,
+          high: price,
+          low: price,
+          close: price,
+        });
+      } else {
+        const candle = candleData.get(hourKey);
+        candle.high = Math.max(candle.high, price);
+        candle.low = Math.min(candle.low, price);
+        candle.close = price;
+      }
+    });
   console.log(
     candleData.get(`${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`)
   );
