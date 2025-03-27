@@ -2,16 +2,18 @@ import Fastify from "fastify";
 import crypto from "crypto";
 import fs from "fs";
 import csv from "csv-parser";
+import path from "path";
 
 const app = Fastify({
   logger: true,
 });
 
 const candleData = new Map();
-
+const csvPath = path.resolve(__dirname, "order_books.csv");
+console.log(csvPath);
 function loadCSV() {
   return new Promise((resolve, reject) => {
-    fs.createReadStream("./order_books.csv")
+    fs.createReadStream(csvPath)
       .pipe(csv(["time", "code", "price"]))
       .on("data", (row) => {
         const date = new Date(row.time);
