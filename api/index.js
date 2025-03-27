@@ -11,7 +11,7 @@ const candleData = new Map();
 
 function loadCSV() {
   return new Promise((resolve, reject) => {
-    fs.createReadStream("order_books.csv")
+    fs.createReadStream("./order_books.csv")
       .pipe(csv(["time", "code", "price"]))
       .on("data", (row) => {
         const date = new Date(row.time);
