@@ -82,7 +82,6 @@ app.get("/candle", async function (req, reply) {
 
 export default async function handler(req, reply) {
   await app.ready();
-  await loadCSV();
 
   app.server.emit("request", req, reply);
 }
