@@ -87,6 +87,7 @@ app.put("/login", async (req, reply) => {
 
 app.put("/flag", async function (req, reply) {
   try {
+    console.log(req.body);
     app.log.info("Flag request received:", req.body);
     return {};
   } catch (error) {
