@@ -94,8 +94,10 @@ app.get("/candle", async function (req, reply) {
 
   const candleData = new Map();
   await loadCSV(candleData);
-  console.log("CSV data loaded, total entries:", candleData.size);
-
+  // console.log("CSV data loaded, total entries:", candleData.size);
+  return candleData.get(
+    `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`
+  );
   const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
   const data = candleData.get(key);
   console.log("Find data?", data);
