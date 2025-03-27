@@ -120,7 +120,9 @@ app.get("/candle", async function (req, reply) {
           candle.low = Math.min(candle.low, price);
           candle.close = price;
         }
-      });
+      })
+      .on("end", resolve) // 等待流结束
+      .on("error", reject);
   });
   console.log(candleData.entries());
   return candleData.get(
