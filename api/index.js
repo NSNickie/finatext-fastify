@@ -37,8 +37,6 @@ function loadCSV() {
       })
       .on("end", resolve)
       .on("error", reject);
-
-    console.log(candleData);
   });
 }
 
@@ -77,5 +75,6 @@ app.get("/candle", function (req, reply) {
 export default async function handler(req, reply) {
   await app.ready();
   await loadCSV();
+  console.log(candleData);
   app.server.emit("request", req, reply);
 }
