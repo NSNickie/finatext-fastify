@@ -8,16 +8,18 @@ const app = Fastify({
   logger: true,
 });
 
-const csvPath = path.resolve(__dirname, "order_books.csv");
+// 使用 process.cwd() 替代 __dirname
+const csvPath = path.join(process.cwd(), "api", "order_books.csv");
 const pad = (num) => String(num).padStart(2, "0");
 
-// 缓存 candleData
-let candleDataCache = null;
-let lastLoadTime = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
-
+// 由于 Vercel 是无状态的，我们每次都需要重新加载数据
 async function loadCSV(candleData) {
   return new Promise((resolve, reject) => {
+    if (!fs.existsSync(csvPath)) {
+      reject(new Error(`CSV file not found at ${csvPath}`));
+      return;
+    }
+
     fs.createReadStream(csvPath)
       .pipe(csv(["time", "code", "price"]))
       .on("data", (row) => {
@@ -64,7 +66,6 @@ app.put("/login", async (req, reply) => {
         .send({ error: "Username and password are required" });
     }
 
-    // 使用更安全的密码哈希方法
     const salt = crypto.randomBytes(16).toString("hex");
     const token = crypto
       .createHash("sha256")
@@ -103,31 +104,25 @@ app.get("/candle", async function (req, reply) {
       return reply.code(400).send({ error: "Invalid date parameters" });
     }
 
-    // 检查缓存是否需要更新
-    if (
-      !candleDataCache ||
-      !lastLoadTime ||
-      Date.now() - lastLoadTime > CACHE_DURATION
-    ) {
-      candleDataCache = new Map();
-      await loadCSV(candleDataCache);
-      lastLoadTime = Date.now();
-      app.log.info("CSV data reloaded, total entries:", candleDataCache.size);
-    }
+    // 每次请求都重新加载数据
+    const candleData = new Map();
+    await loadCSV(candleData);
+    app.log.info("CSV data loaded, total entries:", candleData.size);
 
     const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
-    const data = candleDataCache.get(key);
+    const data = candleData.get(key);
 
     if (!data) {
-      console.log("no data...");
+      app.log.info(`No data found for key: ${key}`);
       return reply
         .code(404)
         .send({ error: "No data found for the specified parameters" });
     }
-    console.log("find!!" + data);
+
+    app.log.info(`Data found for key: ${key}`);
     return data;
   } catch (error) {
-    app.log.error(error);
+    app.log.error("Error in /candle endpoint:", error);
     return reply.code(500).send({ error: "Internal server error" });
   }
 });
