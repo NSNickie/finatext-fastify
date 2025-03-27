@@ -152,7 +152,8 @@ app.get("/candle", async function (req, reply) {
     const key = `${code}_${queryDate.getFullYear()}-${pad(
       queryDate.getMonth() + 1
     )}-${pad(queryDate.getDate())}_${pad(queryDate.getHours())}`;
-    console.log(candleData);
+    console.log(key);
+    // console.log(candleData);
     app.log.info(`Searching for key: ${key}`);
     const data = candleData.get(key);
 
