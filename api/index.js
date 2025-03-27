@@ -24,7 +24,7 @@ app.put("/login", async (req, reply) => {
 });
 
 app.put("/flag", function (req, reply) {
-  console.log(request.body);
+  console.log(req.body);
   return {};
 });
 
