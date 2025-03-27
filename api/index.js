@@ -1,16 +1,36 @@
-import Fastify from 'fastify'
+import Fastify from "fastify";
+import crypto from "crypto";
 
 const app = Fastify({
   logger: true,
-})
+});
 
-app.get('/', async (req, reply) => {
-  return reply.status(200).type('text/html').send(html)
-})
+app.get("/", async (req, reply) => {
+  return reply.status(200).type("text/html").send(html);
+});
+
+app.put("/login", async (req, reply) => {
+  const { username, password } = req.body;
+  console.log(`username:${username}`);
+  console.log(`password:${password}`);
+
+  const token = crypto
+    .createHash("sha1")
+    .update(`${username}${password}`)
+    .digest("hex");
+  console.log(token);
+
+  return { token };
+});
+
+app.put("/flag", function (req, reply) {
+  console.log(request.body);
+  return {};
+});
 
 export default async function handler(req, reply) {
-  await app.ready()
-  app.server.emit('request', req, reply)
+  await app.ready();
+  app.server.emit("request", req, reply);
 }
 
 const html = `
@@ -63,4 +83,4 @@ export default async function handler(req: any, res: any) {
       to get started.
   </body>
 </html>
-`
+`;
