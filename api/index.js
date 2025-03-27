@@ -1,13 +1,42 @@
 import Fastify from "fastify";
 import crypto from "crypto";
+import fs from "fs";
+import csv from "csv-parser";
 
 const app = Fastify({
   logger: true,
 });
 
-app.get("/", async (req, reply) => {
-  return reply.status(200).type("text/html").send(html);
-});
+const candleData = new Map();
+
+function loadCSV() {
+  return new Promise((resolve, reject) => {
+    fs.createReadStream("order_books.csv")
+      .pipe(csv(["time", "code", "price"]))
+      .on("data", (row) => {
+        const date = new Date(row.time);
+        const hourKey = `${row.code}_${date.getFullYear()}-${
+          date.getMonth() + 1
+        }-${date.getDate()}_${date.getHours()}`;
+        const price = parseInt(row.price, 10);
+        if (!candleData.has(hourKey)) {
+          candleData.set(hourKey, {
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+          });
+        } else {
+          const candle = candleData.get(hourKey);
+          candle.high = Math.max(candle.high, price);
+          candle.low = Math.min(candle.low, price);
+          candle.close = price;
+        }
+      })
+      .on("end", resolve)
+      .on("error", reject);
+  });
+}
 
 app.put("/login", async (req, reply) => {
   const { username, password } = req.body;
@@ -28,59 +57,19 @@ app.put("/flag", function (req, reply) {
   return {};
 });
 
+app.get("/candle", function (req, reply) {
+  const { code, year, month, day, hour } = req.query;
+  const key = `${code}_${year}-${month}-${day}_${hour}`;
+
+  if (candleData.has(key)) {
+    return reply.send(candleData.get(key));
+  } else {
+    return reply.code(404).send({ error: "No data found" });
+  }
+});
+
 export default async function handler(req, reply) {
   await app.ready();
+  await loadCSV();
   app.server.emit("request", req, reply);
 }
-
-const html = `
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css"
-    />
-    <title>Vercel + Fastify Hello World</title>
-    <meta
-      name="description"
-      content="This is a starter template for Vercel + Fastify."
-    />
-  </head>
-  <body>
-    <h1>Vercel + Fastify Hello World</h1>
-    <p>
-      This is a starter template for Vercel + Fastify. Requests are
-      rewritten from <code>/*</code> to <code>/api/*</code>, which runs
-      as a Vercel Function.
-    </p>
-    <p>
-        For example, here is the boilerplate code for this route:
-    </p>
-    <pre>
-<code>import Fastify from 'fastify'
-
-const app = Fastify({
-  logger: true,
-})
-
-app.get('/', async (req, res) => {
-  return res.status(200).type('text/html').send(html)
-})
-
-export default async function handler(req: any, res: any) {
-  await app.ready()
-  app.server.emit('request', req, res)
-}</code>
-    </pre>
-    <p>
-    <p>
-      <a href="https://vercel.com/templates/other/fastify-serverless-function">
-      Deploy your own
-      </a>
-      to get started.
-  </body>
-</html>
-`;
