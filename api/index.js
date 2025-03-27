@@ -93,33 +93,35 @@ app.get("/candle", async function (req, reply) {
   const { code, year, month, day, hour } = req.query;
 
   const candleData = new Map();
-  fs.createReadStream(csvPath)
-    .pipe(csv(["time", "code", "price"]))
-    .on("data", (row) => {
-      const formattedTime = row.time
-        .replace(" JST", "")
-        .replace(" +0900", "+09:00");
-      const date = new Date(formattedTime);
+  await new Promise((resolve, reject) => {
+    fs.createReadStream(csvPath)
+      .pipe(csv(["time", "code", "price"]))
+      .on("data", (row) => {
+        const formattedTime = row.time
+          .replace(" JST", "")
+          .replace(" +0900", "+09:00");
+        const date = new Date(formattedTime);
 
-      const hourKey = `${row.code}_${date.getFullYear()}-${pad(
-        date.getMonth() + 1
-      )}-${pad(date.getDate())}_${pad(date.getHours())}`;
-      const price = parseInt(row.price, 10);
+        const hourKey = `${row.code}_${date.getFullYear()}-${pad(
+          date.getMonth() + 1
+        )}-${pad(date.getDate())}_${pad(date.getHours())}`;
+        const price = parseInt(row.price, 10);
 
-      if (!candleData.has(hourKey)) {
-        candleData.set(hourKey, {
-          open: price,
-          high: price,
-          low: price,
-          close: price,
-        });
-      } else {
-        const candle = candleData.get(hourKey);
-        candle.high = Math.max(candle.high, price);
-        candle.low = Math.min(candle.low, price);
-        candle.close = price;
-      }
-    });
+        if (!candleData.has(hourKey)) {
+          candleData.set(hourKey, {
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+          });
+        } else {
+          const candle = candleData.get(hourKey);
+          candle.high = Math.max(candle.high, price);
+          candle.low = Math.min(candle.low, price);
+          candle.close = price;
+        }
+      });
+  });
   console.log(candleData.entries());
   return candleData.get(
     `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`
