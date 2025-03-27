@@ -124,11 +124,11 @@ app.get("/candle", async function (req, reply) {
       .on("end", resolve) // 等待流结束
       .on("error", reject);
   });
-  console.log(candleData.entries());
-  return candleData.get(
-    `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`
-  );
+  // console.log(candleData.entries());
+  console.log(candleData.get("FINA_2021-12-23_09"));
   const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
+  return candleData.get(key);
+  // const key = `${code}_${year}-${pad(month)}-${pad(day)}_${pad(hour)}`;
   const data = candleData.get(key);
   console.log("Find data?", data);
   if (!data) {
